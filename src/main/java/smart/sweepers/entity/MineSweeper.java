@@ -5,6 +5,9 @@ package smart.sweepers.entity;
 
 import java.util.List;
 
+import smart.sweepers.Contents;
+import smart.sweepers.util.Util;
+
 /**
  * @author Andy
  *
@@ -23,7 +26,14 @@ public class MineSweeper {
 	private int closestMine;
 	
 	public MineSweeper(){
+		this.rotation = Util.randFloat() * Contents.TwoPi;
+		this.lTrack = 0.16;
+		this.rTrack = 0.16;
+		this.fitness = 0;
+		this.scale = Contents.iSweeperScale;
+		this.closestMine = 0;
 		
+		this.itsPosition = new Point2D(Util.randFloat() * Contents.WindowWidth, Util.randFloat() * Contents.WindowHeight);
 	}
 	
 	public boolean update(List<Point2D> mines){
@@ -44,7 +54,9 @@ public class MineSweeper {
 	}
 	
 	public void reset(){
-		
+		this.itsPosition = new Point2D(Util.randFloat() * Contents.WindowWidth, Util.randFloat() * Contents.WindowHeight);
+		this.fitness = 0;
+		this.rotation = Util.randFloat() * Contents.TwoPi;
 	}
 	
 	public NeuralNet getItsBrian() {
