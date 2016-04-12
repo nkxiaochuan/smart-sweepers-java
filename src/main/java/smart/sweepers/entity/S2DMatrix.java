@@ -12,6 +12,8 @@ public class S2DMatrix {
 	private double _11, _12, _13;
 	private double _21, _22, _23;
 	private double _31, _32, _33;
+	
+	
 	public double get_11() {
 		return _11;
 	}

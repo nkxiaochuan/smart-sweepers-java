@@ -2,21 +2,21 @@ package smart.sweepers.entity;
 
 public class Point {
 
-	private float x, y;
+	private double x, y;
 
-	public float getX() {
+	public double getX() {
 		return x;
 	}
 
-	public void setX(float x) {
+	public void setX(double x) {
 		this.x = x;
 	}
 
-	public float getY() {
+	public double getY() {
 		return y;
 	}
 
-	public void setY(float y) {
+	public void setY(double y) {
 		this.y = y;
 	}
 }
