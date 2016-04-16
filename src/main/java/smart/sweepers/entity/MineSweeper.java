@@ -3,7 +3,10 @@
  */
 package smart.sweepers.entity;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import javax.swing.text.Utilities;
 
 import smart.sweepers.Contents;
 import smart.sweepers.util.Util;
@@ -37,20 +40,66 @@ public class MineSweeper {
 	}
 	
 	public boolean update(List<Point2D> mines){
+		List<Double> inputs = new ArrayList<>();
+		Point2D pClosestMine = getClosestMine(mines);
+		pClosestMine.point2DNormalize();
+		inputs.add(pClosestMine.getX());
+		inputs.add(pClosestMine.getY());
+		inputs.add(lookAt.getX());
+		inputs.add(lookAt.getY());
+		List<Double> output = itsBrian.update(inputs);
+		if (output.size() < Contents.iNumInputs){
+			return false;
+		}
+		
+		lTrack = output.get(0);
+		rTrack = output.get(1);
+		double rotForce = lTrack - rTrack;
+		rotForce = Util.clamp(rotForce, -Contents.dMaxTurnRate, Contents.dMaxTurnRate);
+		rotation += rotForce;
+		speed = lTrack + rTrack;
+		lookAt.setX(-Math.sin(rotation));
+		lookAt.setY(Math.cos(rotation));
+		itsPosition.setX(itsPosition.getX() + lookAt.getX() * speed);
+		itsPosition.setY(itsPosition.getY() + lookAt.getY() * speed);
+		if(itsPosition.getX() > Contents.WindowWidth )itsPosition.setX(0);
+		if (itsPosition.getX() < 0) itsPosition.setX(Contents.WindowWidth);
+		if (itsPosition.getY() > Contents.WindowHeight) itsPosition.setY(0);
+		if (itsPosition.getY() < 0) itsPosition.setY(Contents.WindowHeight);
 		return true;
 	}
 	
 	public void worldTransform(List<Point> sweeper){
-		
+		J2DMatrix matTransform = new J2DMatrix();
+		matTransform.scale(scale, scale);
+		matTransform.rotate(rotation);
+		matTransform.translate(itsPosition.getX(), itsPosition.getY());
+		matTransform.transformPoints(sweeper);
 	}
 	
 	public Point2D getClosestMine(List<Point2D> mines){
-		return null;
+		double closest_so_far = 9999999;
+		Point2D closestOject = new Point2D(0,0);
+		for (int i = 0; i < mines.size(); i++){
+			double len_to_object = Math.sqrt((mines.get(i).getX() - itsPosition.getX()) * (mines.get(i).getX() - itsPosition.getX()) + (mines.get(i).getY() - itsPosition.getY()) * (mines.get(i).getY() - itsPosition.getY()));
+			if (len_to_object < closest_so_far){
+				closest_so_far = len_to_object;
+				closestOject.setX(itsPosition.getX() - mines.get(i).getX());
+				closestOject.setY(itsPosition.getY() - mines.get(i).getY());
+				closestMine = i;
+			}
+		}
+		return closestOject;
 	}
 	
 	//checks to see if the minesweeper has 'collected' a mine
 	public int checkForMine(List<Point2D> mines, double size){
-		return 0;
+		Point2D distToObject = new Point2D(itsPosition.getX() - mines.get(closestMine).getX(),
+				itsPosition.getY() - mines.get(closestMine).getY());
+		if (distToObject.getPoint2DLength() < (size + 5)){
+			return closestMine;
+		}
+		return -1;
 	}
 	
 	public void reset(){

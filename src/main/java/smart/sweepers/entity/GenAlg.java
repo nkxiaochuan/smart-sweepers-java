@@ -1,6 +1,7 @@
 package smart.sweepers.entity;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import smart.sweepers.Contents;
@@ -51,8 +52,35 @@ public class GenAlg {
 		}
 	}
 	
+	@SuppressWarnings("unused")
 	public List<Genome> epoch(List<Genome> oldPop){
-		return null;
+		listPopulation = oldPop;
+		reset();
+		listPopulation.sort(null);
+		calculateBestWorstAvTot();
+		
+		List<Genome> newPop = new ArrayList<>();
+		//Now to add a little elitism we shall add in some copies of the
+		//fittest genomes. Make sure we add an EVEN number or the roulette
+		//wheel sampling will crash
+		if (Contents.iNumCopiesElite * Contents.iNumElite % 2 != 0) {
+			grabNBest(Contents.iNumElite, Contents.iNumCopiesElite, newPop);
+		}
+		
+		while(newPop.size() < popSize){
+			Genome mum = getChromoRoulette();
+			Genome dad = getChromoRoulette();
+			
+			List<Double> baby1 = new ArrayList<>();
+			List<Double> baby2 = new ArrayList<>();
+			crossover(mum.getListWeight(), dad.getListWeight(), baby1, baby2);
+			mutate(baby1);
+			mutate(baby2);
+			newPop.add(new Genome(baby1, 0));
+			newPop.add(new Genome(baby2, 0));
+		}
+		listPopulation = newPop;
+		return listPopulation;
 	}
 	
 	public double averageFitness(){
@@ -60,7 +88,22 @@ public class GenAlg {
 	}
 	
 	private void crossover(List<Double> mum, List<Double> dad, List<Double> baby1, List<Double> baby2){
+		if ((Util.randFloat() > crossoverRate) || (mum == dad)){
+			baby1 = mum;
+			baby2 = dad;
+			return;
+		}
+		int cp = Util.randomInt(0, chromoLength - 1);
 		
+		for (int i = 0; i < cp; i++){
+			baby1.add(mum.get(i));
+			baby2.add(dad.get(i));
+		}
+		
+		for (int i = cp; i <mum.size(); i++){
+			baby1.add(dad.get(i));
+			baby2.add(mum.get(i));
+		}
 	}
 	
 	private void mutate(List<Double> chromo){
@@ -89,15 +132,39 @@ public class GenAlg {
 	}
 	
 	private void grabNBest(int nBest, int numCopyies, List<Genome> listPopulation){
-		
+		for (int i = nBest; i > 0; i--){
+			for (int j = 0; j < numCopyies; j++){
+				listPopulation.add(this.listPopulation.get(popSize - 1 - i));
+			}
+		}
 	}
 	
 	private void calculateBestWorstAvTot(){
+		totalFitness = 0;
+		double highestSoFar = 0;
+		double lowestSoFar = 9999999;
 		
+		for (int i = 0; i < popSize; i++){
+			if (listPopulation.get(i).getFitness() > highestSoFar){
+				highestSoFar = listPopulation.get(i).getFitness();
+				fittnestGenome = i;
+				bestFitness = highestSoFar;
+			}
+			
+			if (listPopulation.get(i).getFitness() < lowestSoFar){
+				lowestSoFar = listPopulation.get(i).getFitness();
+				worstFitness = lowestSoFar;
+			}
+			totalFitness += listPopulation.get(i).getFitness();
+		}
+		averageFitness = totalFitness / popSize;
 	}
 	
 	private void reset(){
-		
+		totalFitness = 0;
+		bestFitness = 0;
+		worstFitness = 9999999;
+		averageFitness = 0;
 	}
 	
 	
